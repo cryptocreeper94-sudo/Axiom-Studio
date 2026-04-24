@@ -74,7 +74,7 @@ const s = {
   } as React.CSSProperties,
 };
 
-export default function Footer() {
+export default function Footer({ onOpenAnalytics }: { onOpenAnalytics?: () => void }) {
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCommandCenter, setShowCommandCenter] = useState(false);
@@ -262,6 +262,24 @@ export default function Footer() {
 
             {/* Quick Links */}
             <div style={{ padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              {/* Local Axiom Analytics */}
+              {onOpenAnalytics && (
+                <button onClick={() => { onOpenAnalytics(); setShowCommandCenter(false); }} style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "12px 14px", borderRadius: "12px",
+                  background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)",
+                  textDecoration: "none", cursor: "pointer", gridColumn: "1 / -1",
+                }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(34,197,94,0.1)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(34,197,94,0.06)"; }}
+                >
+                  <div style={{
+                    width: "8px", height: "8px", borderRadius: "50%",
+                    background: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.5)",
+                  }} />
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#4ade80" }}>Axiom Studio Analytics</span>
+                </button>
+              )}
               {[
                 { label: "DWTL Command Center", href: "https://darkwavestudios.io/command", color: "#06b6d4" },
                 { label: "Admin Dashboard", href: "https://darkwavestudios.io/admin", color: "#a855f7" },

@@ -13,9 +13,11 @@ import SnippetDock from "../components/SnippetDock";
 import SignalChatWidget from "../components/SignalChatWidget";
 import Footer from "../components/Footer";
 import SmsOptIn from "../components/SmsOptIn";
+import AnalyticsDashboard from "./AnalyticsDashboard";
 import LoginScreen from "../components/LoginScreen";
 import { useAuth } from "../hooks/useAuth";
 import * as api from "../lib/api";
+import { trackPageView, trackEvent, AxiomEvents } from "../lib/analytics";
 
 interface Message {
   id: string;
@@ -40,6 +42,12 @@ export default function AgentPanel() {
   const [artifactsOpen, setArtifactsOpen] = useState(false);
   const [snippetsOpen, setSnippetsOpen] = useState(false);
   const [showSmsOptIn, setShowSmsOptIn] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+
+  // Auto-track page view on mount
+  useEffect(() => {
+    trackPageView("/studio");
+  }, []);
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
@@ -221,6 +229,10 @@ export default function AgentPanel() {
     return <SmsOptIn token={token} onBack={() => setShowSmsOptIn(false)} />;
   }
 
+  if (showAnalytics) {
+    return <AnalyticsDashboard token={token} onBack={() => setShowAnalytics(false)} />;
+  }
+
   const activeAgent = agents.find((a: any) => a.id === activeAgentId);
 
   return (
@@ -303,7 +315,7 @@ export default function AgentPanel() {
           </div>
         </div>
       </div>
-      <Footer />
+      <Footer onOpenAnalytics={() => setShowAnalytics(true)} />
       <SignalChatWidget />
     </div>
   );
