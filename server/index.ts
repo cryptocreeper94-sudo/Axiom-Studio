@@ -11,6 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerAgentRoutes } from "./agent-routes.js";
 import { registerStripeRoutes } from "./stripe-routes.js";
+import notificationRoutes from "./notification-routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -30,6 +31,8 @@ app.use((_req, res, next) => {
 // Register API routes
 registerAgentRoutes(app);
 registerStripeRoutes(app);
+app.use("/api/agent", notificationRoutes);
+console.log("[Axiom Studio] Notification routes registered");
 
 // Health check
 app.get("/api/health", (_req, res) => {

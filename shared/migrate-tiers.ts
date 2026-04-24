@@ -19,7 +19,11 @@ async function migrate() {
         ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR,
         ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR,
         ADD COLUMN IF NOT EXISTS messages_this_month INTEGER DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS month_reset_at TIMESTAMP DEFAULT NOW();
+        ADD COLUMN IF NOT EXISTS month_reset_at TIMESTAMP DEFAULT NOW(),
+        ADD COLUMN IF NOT EXISTS sms_phone VARCHAR,
+        ADD COLUMN IF NOT EXISTS sms_opted_in BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS sms_opted_in_at TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS messages_used INTEGER DEFAULT 0;
     `);
     console.log("[Migration] ✓ subscription columns added");
 

@@ -10,6 +10,9 @@ import ChatView from "../components/ChatView";
 import ErrorForwarder from "../components/ErrorForwarder";
 import ArtifactViewer from "../components/ArtifactViewer";
 import SnippetDock from "../components/SnippetDock";
+import SignalChatWidget from "../components/SignalChatWidget";
+import Footer from "../components/Footer";
+import SmsOptIn from "../components/SmsOptIn";
 import LoginScreen from "../components/LoginScreen";
 import { useAuth } from "../hooks/useAuth";
 import * as api from "../lib/api";
@@ -36,6 +39,7 @@ export default function AgentPanel() {
   const [routeInfo, setRouteInfo] = useState<{ model: string; agent: string; score: number; reason: string } | null>(null);
   const [artifactsOpen, setArtifactsOpen] = useState(false);
   const [snippetsOpen, setSnippetsOpen] = useState(false);
+  const [showSmsOptIn, setShowSmsOptIn] = useState(false);
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
@@ -213,86 +217,94 @@ export default function AgentPanel() {
     return <LoginScreen onLogin={login} onSignup={signup} />;
   }
 
+  if (showSmsOptIn) {
+    return <SmsOptIn token={token} onBack={() => setShowSmsOptIn(false)} />;
+  }
+
   const activeAgent = agents.find((a: any) => a.id === activeAgentId);
 
   return (
-    <div className="h-screen flex">
-      <Sidebar
-        conversations={conversations}
-        agents={agents}
-        activeConvoId={activeConvoId}
-        activeAgentId={activeAgentId}
-        credits={creditData?.credits ?? 0}
-        onSelectConvo={setActiveConvoId}
-        onNewChat={handleNewChat}
-        onDeleteConvo={handleDeleteConvo}
-        onSelectAgent={handleSelectAgent}
-      />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
-        {/* Artifact toggle + Error forwarder toolbar */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "8px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)",
-          background: "#080c15",
-        }}>
-          <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button
-              onClick={() => setSnippetsOpen(!snippetsOpen)}
-              style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                padding: "8px 14px", borderRadius: "10px",
-                background: snippetsOpen ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
-                border: `1px solid ${snippetsOpen ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.06)"}`,
-                color: snippetsOpen ? "#c084fc" : "rgba(255,255,255,0.4)",
-                fontSize: "12px", fontWeight: 500, cursor: "pointer",
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        <Sidebar
+          conversations={conversations}
+          agents={agents}
+          activeConvoId={activeConvoId}
+          activeAgentId={activeAgentId}
+          credits={creditData?.credits ?? 0}
+          onSelectConvo={setActiveConvoId}
+          onNewChat={handleNewChat}
+          onDeleteConvo={handleDeleteConvo}
+          onSelectAgent={handleSelectAgent}
+        />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+          {/* Artifact toggle + Error forwarder toolbar */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "8px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+            background: "#080c15",
+          }}>
+            <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                onClick={() => setSnippetsOpen(!snippetsOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "8px 14px", borderRadius: "10px",
+                  background: snippetsOpen ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${snippetsOpen ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.06)"}`,
+                  color: snippetsOpen ? "#c084fc" : "rgba(255,255,255,0.4)",
+                  fontSize: "12px", fontWeight: 500, cursor: "pointer",
+                }}
+              >
+                <Package style={{ width: 14, height: 14 }} />
+                Snippets
+              </button>
+              <button
+                onClick={() => setArtifactsOpen(!artifactsOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "8px 14px", borderRadius: "10px",
+                  background: artifactsOpen ? "rgba(6,182,212,0.12)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${artifactsOpen ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.06)"}`,
+                  color: artifactsOpen ? "#67e8f9" : "rgba(255,255,255,0.4)",
+                  fontSize: "12px", fontWeight: 500, cursor: "pointer",
+                }}
+              >
+                <FileCode style={{ width: 14, height: 14 }} />
+                Artifacts
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+            <ChatView
+              messages={messages}
+              streamingContent={streamingContent}
+              isStreaming={isStreaming}
+              agentName={activeAgentId === "auto" ? "Axiom" : (activeAgent?.name || "Axiom")}
+              agentColor={activeAgent?.color || "from-cyan-500 to-purple-600"}
+              routeInfo={routeInfo}
+              onSend={handleSend}
+              onRetry={handleRetry}
+            />
+            <ArtifactViewer
+              messages={messages}
+              isOpen={artifactsOpen}
+              onClose={() => setArtifactsOpen(false)}
+            />
+            <SnippetDock
+              isOpen={snippetsOpen}
+              onClose={() => setSnippetsOpen(false)}
+              onInsert={(code, title) => {
+                handleSend(`Use this snippet (${title}):\n\n\`\`\`\n${code}\n\`\`\``);
+                setSnippetsOpen(false);
               }}
-            >
-              <Package style={{ width: 14, height: 14 }} />
-              Snippets
-            </button>
-            <button
-              onClick={() => setArtifactsOpen(!artifactsOpen)}
-              style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                padding: "8px 14px", borderRadius: "10px",
-                background: artifactsOpen ? "rgba(6,182,212,0.12)" : "rgba(255,255,255,0.03)",
-                border: `1px solid ${artifactsOpen ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.06)"}`,
-                color: artifactsOpen ? "#67e8f9" : "rgba(255,255,255,0.4)",
-                fontSize: "12px", fontWeight: 500, cursor: "pointer",
-              }}
-            >
-              <FileCode style={{ width: 14, height: 14 }} />
-              Artifacts
-            </button>
+            />
           </div>
         </div>
-        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-          <ChatView
-            messages={messages}
-            streamingContent={streamingContent}
-            isStreaming={isStreaming}
-            agentName={activeAgentId === "auto" ? "Axiom" : (activeAgent?.name || "Axiom")}
-            agentColor={activeAgent?.color || "from-cyan-500 to-purple-600"}
-            routeInfo={routeInfo}
-            onSend={handleSend}
-            onRetry={handleRetry}
-          />
-          <ArtifactViewer
-            messages={messages}
-            isOpen={artifactsOpen}
-            onClose={() => setArtifactsOpen(false)}
-          />
-          <SnippetDock
-            isOpen={snippetsOpen}
-            onClose={() => setSnippetsOpen(false)}
-            onInsert={(code, title) => {
-              handleSend(`Use this snippet (${title}):\n\n\`\`\`\n${code}\n\`\`\``);
-              setSnippetsOpen(false);
-            }}
-          />
-        </div>
       </div>
+      <Footer />
+      <SignalChatWidget />
     </div>
   );
 }
