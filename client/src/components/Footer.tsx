@@ -80,20 +80,41 @@ const s = {
 export default function Footer({ onOpenAnalytics }: { onOpenAnalytics?: () => void }) {
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showPinModal, setShowPinModal] = useState(false);
   const [showCommandCenter, setShowCommandCenter] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+
+  const OWNER_PIN = "0424";
 
   const handleShieldClick = useCallback(() => {
     clickCountRef.current += 1;
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
-      setShowCommandCenter(true);
+      setShowPinModal(true);
+      setPin("");
+      setPinError(false);
+      setTimeout(() => pinInputRef.current?.focus(), 100);
     } else {
       clickTimerRef.current = setTimeout(() => {
         clickCountRef.current = 0;
       }, 2000);
     }
   }, []);
+
+  const handlePinSubmit = useCallback(() => {
+    if (pin === OWNER_PIN) {
+      setShowPinModal(false);
+      setShowCommandCenter(true);
+      setPin("");
+    } else {
+      setPinError(true);
+      setPin("");
+      setTimeout(() => setPinError(false), 600);
+    }
+  }, [pin]);
 
   return (
     <>
@@ -227,7 +248,67 @@ export default function Footer({ onOpenAnalytics }: { onOpenAnalytics?: () => vo
         </div>
       </footer>
 
-      {/* Command Center Modal — triggered by 3x shield click */}
+      {/* PIN Gate Modal — triggered by 3x shield click */}
+      {showPinModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9998,
+          background: "rgba(0,0,0,0.9)", backdropFilter: "blur(16px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }} onClick={() => setShowPinModal(false)}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            width: "280px", padding: "32px 24px", borderRadius: "20px",
+            background: "#0a0e1a", border: "1px solid rgba(6,182,212,0.15)",
+            boxShadow: "0 32px 100px rgba(6,182,212,0.1)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: "20px",
+            animation: pinError ? "shake 0.4s ease" : undefined,
+          }}>
+            <Shield style={{ width: 28, height: 28, color: pinError ? "#ef4444" : "#06b6d4" }} />
+            <p style={{ fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "0.05em" }}>
+              Enter PIN
+            </p>
+            <input
+              ref={pinInputRef}
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              value={pin}
+              autoFocus
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                setPin(v);
+                if (v.length === 4) {
+                  setTimeout(() => {
+                    if (v === OWNER_PIN) {
+                      setShowPinModal(false);
+                      setShowCommandCenter(true);
+                      setPin("");
+                    } else {
+                      setPinError(true);
+                      setPin("");
+                      setTimeout(() => setPinError(false), 600);
+                    }
+                  }, 100);
+                }
+              }}
+              onKeyDown={(e) => { if (e.key === "Enter") handlePinSubmit(); if (e.key === "Escape") setShowPinModal(false); }}
+              style={{
+                width: "140px", textAlign: "center", letterSpacing: "12px", fontSize: "24px",
+                fontWeight: 800, padding: "12px 16px", borderRadius: "12px",
+                background: "rgba(255,255,255,0.03)", color: "white",
+                border: `2px solid ${pinError ? "rgba(239,68,68,0.5)" : "rgba(6,182,212,0.2)"}`,
+                outline: "none", caretColor: "#06b6d4",
+                transition: "border-color 0.3s",
+              }}
+              placeholder="····"
+            />
+            <p style={{ fontSize: "10px", color: pinError ? "#ef4444" : "rgba(255,255,255,0.15)" }}>
+              {pinError ? "Incorrect PIN" : "4-digit developer access code"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Command Center Modal — triggered by correct PIN */}
       {showCommandCenter && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 9999,
