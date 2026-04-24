@@ -6,11 +6,12 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "dist/server",
-    "rootDir": "server",
+    "outDir": "dist",
+    "rootDir": ".",
+    "baseUrl": ".",
     "resolveJsonModule": true,
     "paths": {
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["./shared/*"]
     }
   },
   "include": ["server/**/*", "shared/**/*"],
