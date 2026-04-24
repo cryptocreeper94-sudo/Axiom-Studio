@@ -71,6 +71,10 @@ function requireAuth(req: Request, res: Response): string | null {
 // ─── Credit Management ───────────────────────────────────────────────
 
 async function checkCredits(userId: string, agentId: string): Promise<boolean> {
+  // Owner bypass — unlimited access
+  const [user] = await db.select().from(chatUsers).where(eq(chatUsers.id, userId)).limit(1);
+  if (user?.role === "owner") return true;
+
   const costKey = `agent-${agentId}` as keyof typeof AGENT_CREDIT_COSTS;
   const cost = AGENT_CREDIT_COSTS[costKey]?.credits ?? 1;
   if (cost === 0) return true;
@@ -240,11 +244,16 @@ export function registerAgentRoutes(app: Express): void {
       return;
     }
 
-    // Create user — whitelist access_level determines starting credits
+    // Create user — whitelist access_level determines starting credits and role
     const passwordHash = await bcrypt.hash(password, 12);
     const colors = ["#06b6d4", "#14b8a6", "#a855f7", "#3b82f6", "#ec4899", "#f97316"];
     const avatarColor = colors[Math.floor(Math.random() * colors.length)];
-    const startingCredits = entry?.access_level === "full" ? 100 : 10;
+    const isOwner = entry?.access_level === "owner";
+
+    // Check for pre-granted credits in whitelist notes (e.g. "pre-granted 500 credits")
+    const preGrantMatch = entry?.notes?.match(/pre-granted\s+(\d+)\s+credits/i);
+    const preGrantedCredits = preGrantMatch ? parseInt(preGrantMatch[1]) : 0;
+    const startingCredits = isOwner ? 999999 : preGrantedCredits > 0 ? preGrantedCredits : entry?.access_level === "full" ? 100 : 10;
 
     const [newUser] = await db
       .insert(chatUsers)
@@ -254,7 +263,7 @@ export function registerAgentRoutes(app: Express): void {
         passwordHash,
         displayName: displayName || username,
         avatarColor,
-        role: entry?.access_level === "full" ? "member" : "member",
+        role: isOwner ? "owner" : "member",
       })
       .returning();
 
