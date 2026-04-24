@@ -1,0 +1,93 @@
+/**
+ * Axiom Studio — API Client
+ * Typed fetch helpers for the agent API.
+ */
+
+const BASE = "/api/agent";
+
+function headers(token: string | null) {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) h["Authorization"] = `Bearer ${token}`;
+  return h;
+}
+
+export async function fetchModels() {
+  const res = await fetch(`${BASE}/models`);
+  return res.json();
+}
+
+export async function fetchConversations(token: string) {
+  const res = await fetch(`${BASE}/conversations`, { headers: headers(token) });
+  return res.json();
+}
+
+export async function createConversation(token: string, agentId: string, model: string) {
+  const res = await fetch(`${BASE}/conversations`, {
+    method: "POST",
+    headers: headers(token),
+    body: JSON.stringify({ agentId, model }),
+  });
+  return res.json();
+}
+
+export async function fetchMessages(token: string, conversationId: string) {
+  const res = await fetch(`${BASE}/conversations/${conversationId}/messages`, {
+    headers: headers(token),
+  });
+  return res.json();
+}
+
+export async function deleteConversation(token: string, id: string) {
+  await fetch(`${BASE}/conversations/${id}`, {
+    method: "DELETE",
+    headers: headers(token),
+  });
+}
+
+export async function fetchCredits(token: string) {
+  const res = await fetch(`${BASE}/credits`, { headers: headers(token) });
+  return res.json();
+}
+
+export async function* streamChat(
+  token: string,
+  conversationId: string,
+  message: string,
+  agentId: string,
+  errorContext?: string
+): AsyncGenerator<{ type: string; content?: string; inputTokens?: number; outputTokens?: number; error?: string }> {
+  const res = await fetch(`${BASE}/chat`, {
+    method: "POST",
+    headers: headers(token),
+    body: JSON.stringify({ conversationId, message, agentId, errorContext }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Stream failed" }));
+    yield { type: "error", error: err.error || err.message || "Request failed" };
+    return;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) return;
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        try {
+          yield JSON.parse(line.slice(6));
+        } catch {}
+      }
+    }
+  }
+}

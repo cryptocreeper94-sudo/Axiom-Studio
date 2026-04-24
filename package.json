@@ -1,0 +1,53 @@
+{
+  "name": "axiom-studio",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Axiom Studio — Multi-Agent AI Coding IDE by DarkWave Studios",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "set NODE_ENV=development&& tsx server/index.ts",
+    "dev:client": "vite dev --port 5100",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "start": "NODE_ENV=production node dist/server/index.js",
+    "check": "tsc --noEmit",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@tanstack/react-query": "^5.60.5",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.39.3",
+    "drizzle-zod": "^0.7.1",
+    "express": "^5.2.1",
+    "framer-motion": "^12.23.24",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^0.545.0",
+    "marked": "^15.0.0",
+    "openai": "^6.16.0",
+    "pg": "^8.16.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "stripe": "^22.1.0",
+    "wouter": "^3.3.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.0",
+    "tsx": "^4.20.5",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8"
+  }
+}

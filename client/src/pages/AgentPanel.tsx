@@ -1,0 +1,272 @@
+/**
+ * Axiom Studio — Agent Panel (Main Page)
+ * Wires sidebar, chat, and streaming together.
+ */
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileCode } from "lucide-react";
+import Sidebar from "../components/Sidebar";
+import ChatView from "../components/ChatView";
+import ErrorForwarder from "../components/ErrorForwarder";
+import ArtifactViewer from "../components/ArtifactViewer";
+import LoginScreen from "../components/LoginScreen";
+import { useAuth } from "../hooks/useAuth";
+import * as api from "../lib/api";
+
+interface Message {
+  id: string;
+  role: string;
+  content: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  errorContext?: string;
+  createdAt: string;
+}
+
+export default function AgentPanel() {
+  const { token, user, login, signup, logout } = useAuth();
+  const queryClient = useQueryClient();
+  const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
+  const [activeAgentId, setActiveAgentId] = useState("auto");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [streamingContent, setStreamingContent] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<{ model: string; agent: string; score: number; reason: string } | null>(null);
+  const [artifactsOpen, setArtifactsOpen] = useState(false);
+
+  // Fetch agents
+  const { data: agents = [] } = useQuery({
+    queryKey: ["agents"],
+    queryFn: api.fetchModels,
+  });
+
+  // Fetch conversations
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["conversations", token],
+    queryFn: () => api.fetchConversations(token!),
+    enabled: !!token,
+  });
+
+  // Fetch credits
+  const { data: creditData } = useQuery({
+    queryKey: ["credits", token],
+    queryFn: () => api.fetchCredits(token!),
+    enabled: !!token,
+    refetchInterval: 30000,
+  });
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (!activeConvoId || !token) { setMessages([]); return; }
+    api.fetchMessages(token, activeConvoId).then(setMessages).catch(() => setMessages([]));
+  }, [activeConvoId, token]);
+
+  // Select agent
+  const handleSelectAgent = useCallback((id: string) => {
+    setActiveAgentId(id);
+  }, []);
+
+  // New chat
+  const handleNewChat = useCallback(async () => {
+    if (!token) return;
+    const agent = agents.find((a: any) => a.id === activeAgentId) || agents[0];
+    const convo = await api.createConversation(token, activeAgentId, agent?.model || "claude-opus-4-20250514");
+    setActiveConvoId(convo.id);
+    setMessages([]);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  }, [token, activeAgentId, agents, queryClient]);
+
+  // Delete conversation
+  const handleDeleteConvo = useCallback(async (id: string) => {
+    if (!token) return;
+    await api.deleteConversation(token, id);
+    if (activeConvoId === id) { setActiveConvoId(null); setMessages([]); }
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  }, [token, activeConvoId, queryClient]);
+
+  // Send message
+  const handleSend = useCallback(async (message: string) => {
+    if (!token || !activeConvoId || isStreaming) return;
+
+    // Optimistic user message
+    const userMsg: Message = {
+      id: `temp-${Date.now()}`,
+      role: "user",
+      content: message,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setIsStreaming(true);
+    setStreamingContent("");
+    setRouteInfo(null);
+
+    let fullContent = "";
+    let finalInputTokens = 0;
+    let finalOutputTokens = 0;
+
+    try {
+      for await (const chunk of api.streamChat(token, activeConvoId, message, activeAgentId)) {
+        if (chunk.type === "text" && chunk.content) {
+          fullContent += chunk.content;
+          setStreamingContent(fullContent);
+        } else if (chunk.type === "route") {
+          setRouteInfo({ model: chunk.model, agent: chunk.agent, score: chunk.score, reason: chunk.reason });
+        } else if (chunk.type === "usage") {
+          finalInputTokens = chunk.inputTokens || 0;
+          finalOutputTokens = chunk.outputTokens || 0;
+        } else if (chunk.type === "error") {
+          fullContent += `\n\n**Error:** ${chunk.error}`;
+          setStreamingContent(fullContent);
+        }
+      }
+    } catch (err: any) {
+      fullContent = `**Error:** ${err.message || "Stream failed"}`;
+    }
+
+    // Add assistant message
+    const assistantMsg: Message = {
+      id: `resp-${Date.now()}`,
+      role: "assistant",
+      content: fullContent,
+      model: agents.find((a: any) => a.id === activeAgentId)?.model,
+      inputTokens: finalInputTokens,
+      outputTokens: finalOutputTokens,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+    setStreamingContent("");
+    setIsStreaming(false);
+
+    // Refresh data
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    queryClient.invalidateQueries({ queryKey: ["credits"] });
+  }, [token, activeConvoId, activeAgentId, isStreaming, agents, queryClient]);
+
+  // Retry
+  const handleRetry = useCallback(() => {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (lastUserMsg) {
+      setMessages((prev) => prev.slice(0, -1)); // Remove last assistant
+      handleSend(lastUserMsg.content);
+    }
+  }, [messages, handleSend]);
+  // Send error to agent
+  const handleSendError = useCallback(async (errorContext: string, userMessage: string) => {
+    if (!token || isStreaming) return;
+    // Create conversation if needed
+    let convoId = activeConvoId;
+    if (!convoId) {
+      const convo = await api.createConversation(token, activeAgentId, "claude-opus-4-20250514");
+      convoId = convo.id;
+      setActiveConvoId(convoId);
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    }
+    // Send as error-enriched message
+    const userMsg: Message = {
+      id: `temp-${Date.now()}`, role: "user", content: userMessage,
+      errorContext, createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setIsStreaming(true);
+    setStreamingContent("");
+    setRouteInfo(null);
+
+    let fullContent = "";
+    let finalInputTokens = 0;
+    let finalOutputTokens = 0;
+
+    try {
+      for await (const chunk of api.streamChat(token, convoId!, userMessage, activeAgentId, errorContext)) {
+        if (chunk.type === "text" && chunk.content) {
+          fullContent += chunk.content;
+          setStreamingContent(fullContent);
+        } else if (chunk.type === "route") {
+          setRouteInfo({ model: chunk.model, agent: chunk.agent, score: chunk.score, reason: chunk.reason });
+        } else if (chunk.type === "usage") {
+          finalInputTokens = chunk.inputTokens || 0;
+          finalOutputTokens = chunk.outputTokens || 0;
+        } else if (chunk.type === "error") {
+          fullContent += `\n\n**Error:** ${chunk.error}`;
+          setStreamingContent(fullContent);
+        }
+      }
+    } catch (err: any) {
+      fullContent = `**Error:** ${err.message || "Stream failed"}`;
+    }
+
+    setMessages((prev) => [...prev, {
+      id: `resp-${Date.now()}`, role: "assistant", content: fullContent,
+      inputTokens: finalInputTokens, outputTokens: finalOutputTokens,
+      createdAt: new Date().toISOString(),
+    }]);
+    setStreamingContent("");
+    setIsStreaming(false);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    queryClient.invalidateQueries({ queryKey: ["credits"] });
+  }, [token, activeConvoId, activeAgentId, isStreaming, queryClient]);
+
+  // Not logged in
+  if (!token) {
+    return <LoginScreen onLogin={login} onSignup={signup} />;
+  }
+
+  const activeAgent = agents.find((a: any) => a.id === activeAgentId);
+
+  return (
+    <div className="h-screen flex">
+      <Sidebar
+        conversations={conversations}
+        agents={agents}
+        activeConvoId={activeConvoId}
+        activeAgentId={activeAgentId}
+        credits={creditData?.credits ?? 0}
+        onSelectConvo={setActiveConvoId}
+        onNewChat={handleNewChat}
+        onDeleteConvo={handleDeleteConvo}
+        onSelectAgent={handleSelectAgent}
+      />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
+        {/* Artifact toggle + Error forwarder toolbar */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "8px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+          background: "#080c15",
+        }}>
+          <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
+          <button
+            onClick={() => setArtifactsOpen(!artifactsOpen)}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "10px",
+              background: artifactsOpen ? "rgba(6,182,212,0.12)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${artifactsOpen ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.06)"}`,
+              color: artifactsOpen ? "#67e8f9" : "rgba(255,255,255,0.4)",
+              fontSize: "12px", fontWeight: 500, cursor: "pointer",
+            }}
+          >
+            <FileCode style={{ width: 14, height: 14 }} />
+            Artifacts
+          </button>
+        </div>
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          <ChatView
+            messages={messages}
+            streamingContent={streamingContent}
+            isStreaming={isStreaming}
+            agentName={activeAgentId === "auto" ? "Axiom" : (activeAgent?.name || "Axiom")}
+            agentColor={activeAgent?.color || "from-cyan-500 to-purple-600"}
+            routeInfo={routeInfo}
+            onSend={handleSend}
+            onRetry={handleRetry}
+          />
+          <ArtifactViewer
+            messages={messages}
+            isOpen={artifactsOpen}
+            onClose={() => setArtifactsOpen(false)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
