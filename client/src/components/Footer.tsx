@@ -38,8 +38,8 @@ const s = {
   } as React.CSSProperties,
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-    gap: "32px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+    gap: "24px",
     maxWidth: "1100px",
     margin: "0 auto",
   } as React.CSSProperties,
@@ -261,7 +261,7 @@ export default function Footer({ onOpenAnalytics }: { onOpenAnalytics?: () => vo
             </div>
 
             {/* Quick Links */}
-            <div style={{ padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+            <div className="ax-cmd-grid" style={{ padding: "20px", display: "grid", gap: "8px" }}>
               {/* Local Axiom Analytics */}
               {onOpenAnalytics && (
                 <button onClick={() => { onOpenAnalytics(); setShowCommandCenter(false); }} style={{

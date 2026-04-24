@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileCode, Package } from "lucide-react";
+import { FileCode, Package, Menu } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ChatView from "../components/ChatView";
 import ErrorForwarder from "../components/ErrorForwarder";
@@ -13,6 +13,7 @@ import SnippetDock from "../components/SnippetDock";
 import SignalChatWidget from "../components/SignalChatWidget";
 import Footer from "../components/Footer";
 import SmsOptIn from "../components/SmsOptIn";
+import CockpitNav from "../components/CockpitNav";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import LoginScreen from "../components/LoginScreen";
 import { useAuth } from "../hooks/useAuth";
@@ -43,6 +44,7 @@ export default function AgentPanel() {
   const [snippetsOpen, setSnippetsOpen] = useState(false);
   const [showSmsOptIn, setShowSmsOptIn] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Auto-track page view on mount
   useEffect(() => {
@@ -236,29 +238,45 @@ export default function AgentPanel() {
   const activeAgent = agents.find((a: any) => a.id === activeAgentId);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", height: "100dvh" }}>
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+        {/* Mobile overlay */}
+        <div
+          className={`sidebar-overlay ${sidebarOpen ? "active" : ""}`}
+          onClick={() => setSidebarOpen(false)}
+        />
         <Sidebar
           conversations={conversations}
           agents={agents}
           activeConvoId={activeConvoId}
           activeAgentId={activeAgentId}
           credits={creditData?.credits ?? 0}
-          onSelectConvo={setActiveConvoId}
-          onNewChat={handleNewChat}
+          onSelectConvo={(id) => { setActiveConvoId(id); setSidebarOpen(false); }}
+          onNewChat={() => { handleNewChat(); setSidebarOpen(false); }}
           onDeleteConvo={handleDeleteConvo}
-          onSelectAgent={handleSelectAgent}
+          onSelectAgent={(id) => { handleSelectAgent(id); setSidebarOpen(false); }}
+          sidebarOpen={sidebarOpen}
         />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative" }}>
-          {/* Artifact toggle + Error forwarder toolbar */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", minWidth: 0 }}>
+          {/* Toolbar */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "8px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)",
-            background: "#080c15",
+            padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+            background: "#080c15", gap: "8px", flexWrap: "wrap",
           }}>
-            <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
-            <div style={{ display: "flex", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
               <button
+                className="mobile-menu-btn"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu style={{ width: 16, height: 16 }} />
+              </button>
+              <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+              <button
+                className="desktop-toolbar-btn"
                 onClick={() => setSnippetsOpen(!snippetsOpen)}
                 style={{
                   display: "flex", alignItems: "center", gap: "6px",
@@ -273,6 +291,7 @@ export default function AgentPanel() {
                 Snippets
               </button>
               <button
+                className="desktop-toolbar-btn"
                 onClick={() => setArtifactsOpen(!artifactsOpen)}
                 style={{
                   display: "flex", alignItems: "center", gap: "6px",
@@ -316,6 +335,15 @@ export default function AgentPanel() {
         </div>
       </div>
       <Footer onOpenAnalytics={() => setShowAnalytics(true)} />
+      <CockpitNav
+        onOpenSidebar={() => setSidebarOpen(true)}
+        onToggleSnippets={() => setSnippetsOpen(!snippetsOpen)}
+        onToggleArtifacts={() => setArtifactsOpen(!artifactsOpen)}
+        onOpenAnalytics={() => setShowAnalytics(true)}
+        snippetsOpen={snippetsOpen}
+        artifactsOpen={artifactsOpen}
+        activeView={showAnalytics ? "analytics" : "chat"}
+      />
       <SignalChatWidget />
     </div>
   );

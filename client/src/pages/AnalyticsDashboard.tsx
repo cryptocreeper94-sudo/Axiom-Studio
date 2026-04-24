@@ -168,8 +168,8 @@ export default function AnalyticsDashboard({ token, onBack }: { token: string; o
         ) : data ? (
           <>
             {/* Stat Cards */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            <div className="ax-stat-grid" style={{
+              display: "grid",
               gap: "12px", marginBottom: "20px",
             }}>
               {[
@@ -196,8 +196,8 @@ export default function AnalyticsDashboard({ token, onBack }: { token: string; o
             </div>
 
             {/* Two-column layout */}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px",
+            <div className="ax-detail-grid" style={{
+              display: "grid", gap: "12px",
             }}>
               {/* Daily chart */}
               <div style={{
@@ -409,6 +409,15 @@ export default function AnalyticsDashboard({ token, onBack }: { token: string; o
       <style>{`
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .ax-stat-grid { grid-template-columns: repeat(3, 1fr); }
+        .ax-detail-grid { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 768px) {
+          .ax-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .ax-detail-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .ax-stat-grid { grid-template-columns: 1fr 1fr !important; }
+        }
       `}</style>
     </div>
   );

@@ -34,6 +34,7 @@ interface Props {
   onNewChat: () => void;
   onDeleteConvo: (id: string) => void;
   onSelectAgent: (id: string) => void;
+  sidebarOpen?: boolean;
 }
 
 export default function Sidebar({
@@ -46,7 +47,7 @@ export default function Sidebar({
   const AgentIcon = isAuto ? Wand2 : (activeAgent ? ICONS[activeAgent.icon] || Brain : Brain);
 
   return (
-    <div className="w-72 h-full flex flex-col border-r border-white/[0.06] bg-[#080c15]">
+    <div className={`w-72 h-full flex flex-col border-r border-white/[0.06] bg-[#080c15] ${sidebarOpen ? 'sidebar-open' : ''}`}>
       {/* Header */}
       <div className="p-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-3 mb-4">

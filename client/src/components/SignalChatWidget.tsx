@@ -36,8 +36,9 @@ export default function SignalChatWidget() {
       {/* Chat panel */}
       {open && (
         <div style={{
-          position: "fixed", bottom: "80px", right: "20px", zIndex: 998,
-          width: "360px", height: "480px",
+          position: "fixed", bottom: "80px", right: "12px", zIndex: 998,
+          width: "min(360px, calc(100vw - 24px))",
+          height: "min(480px, calc(100vh - 120px))",
           borderRadius: "20px", overflow: "hidden",
           border: "1px solid rgba(255,255,255,0.08)",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
