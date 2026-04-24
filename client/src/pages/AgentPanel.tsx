@@ -4,11 +4,12 @@
  */
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileCode } from "lucide-react";
+import { FileCode, Package } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ChatView from "../components/ChatView";
 import ErrorForwarder from "../components/ErrorForwarder";
 import ArtifactViewer from "../components/ArtifactViewer";
+import SnippetDock from "../components/SnippetDock";
 import LoginScreen from "../components/LoginScreen";
 import { useAuth } from "../hooks/useAuth";
 import * as api from "../lib/api";
@@ -34,6 +35,7 @@ export default function AgentPanel() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ model: string; agent: string; score: number; reason: string } | null>(null);
   const [artifactsOpen, setArtifactsOpen] = useState(false);
+  const [snippetsOpen, setSnippetsOpen] = useState(false);
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
@@ -234,20 +236,36 @@ export default function AgentPanel() {
           background: "#080c15",
         }}>
           <ErrorForwarder onSendError={handleSendError} isStreaming={isStreaming} />
-          <button
-            onClick={() => setArtifactsOpen(!artifactsOpen)}
-            style={{
-              display: "flex", alignItems: "center", gap: "6px",
-              padding: "8px 14px", borderRadius: "10px",
-              background: artifactsOpen ? "rgba(6,182,212,0.12)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${artifactsOpen ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.06)"}`,
-              color: artifactsOpen ? "#67e8f9" : "rgba(255,255,255,0.4)",
-              fontSize: "12px", fontWeight: 500, cursor: "pointer",
-            }}
-          >
-            <FileCode style={{ width: 14, height: 14 }} />
-            Artifacts
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              onClick={() => setSnippetsOpen(!snippetsOpen)}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "8px 14px", borderRadius: "10px",
+                background: snippetsOpen ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${snippetsOpen ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.06)"}`,
+                color: snippetsOpen ? "#c084fc" : "rgba(255,255,255,0.4)",
+                fontSize: "12px", fontWeight: 500, cursor: "pointer",
+              }}
+            >
+              <Package style={{ width: 14, height: 14 }} />
+              Snippets
+            </button>
+            <button
+              onClick={() => setArtifactsOpen(!artifactsOpen)}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "8px 14px", borderRadius: "10px",
+                background: artifactsOpen ? "rgba(6,182,212,0.12)" : "rgba(255,255,255,0.03)",
+                border: `1px solid ${artifactsOpen ? "rgba(6,182,212,0.2)" : "rgba(255,255,255,0.06)"}`,
+                color: artifactsOpen ? "#67e8f9" : "rgba(255,255,255,0.4)",
+                fontSize: "12px", fontWeight: 500, cursor: "pointer",
+              }}
+            >
+              <FileCode style={{ width: 14, height: 14 }} />
+              Artifacts
+            </button>
+          </div>
         </div>
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
           <ChatView
@@ -264,6 +282,14 @@ export default function AgentPanel() {
             messages={messages}
             isOpen={artifactsOpen}
             onClose={() => setArtifactsOpen(false)}
+          />
+          <SnippetDock
+            isOpen={snippetsOpen}
+            onClose={() => setSnippetsOpen(false)}
+            onInsert={(code, title) => {
+              handleSend(`Use this snippet (${title}):\n\n\`\`\`\n${code}\n\`\`\``);
+              setSnippetsOpen(false);
+            }}
           />
         </div>
       </div>
