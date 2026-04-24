@@ -13,6 +13,7 @@ import { registerAgentRoutes } from "./agent-routes.js";
 import { registerStripeRoutes } from "./stripe-routes.js";
 import notificationRoutes from "./notification-routes.js";
 import analyticsRoutes from "./analytics-routes.js";
+import workspaceRoutes from "./workspace-routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -36,6 +37,8 @@ app.use("/api/agent", notificationRoutes);
 console.log("[Axiom Studio] Notification routes registered");
 app.use("/api/analytics", analyticsRoutes);
 console.log("[Axiom Studio] Analytics routes registered");
+app.use("/api/workspace", workspaceRoutes);
+console.log("[Axiom Studio] Workspace FS routes registered");
 
 // Health check
 app.get("/api/health", (_req, res) => {
@@ -59,7 +62,7 @@ if (process.env.NODE_ENV === "production") {
 const PORT = parseInt(process.env.PORT || "5101");
 app.listen(PORT, () => {
   console.log(`\n  ╔══════════════════════════════════════╗`);
-  console.log(`  ║     AXIOM STUDIO — v1.0.0            ║`);
+  console.log(`  ║     AXIOM STUDIO IDE — v2.0.0        ║`);
   console.log(`  ║     DarkWave Studios LLC              ║`);
   console.log(`  ║     http://localhost:${PORT}             ║`);
   console.log(`  ╚══════════════════════════════════════╝\n`);
