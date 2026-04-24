@@ -7,8 +7,11 @@ import { useState, useEffect, useCallback } from "react";
 import { Brain, LogIn, UserPlus, Loader2 } from "lucide-react";
 
 interface Props {
-  onLogin: (username: string, password: string) => Promise<string | null>;
+  onLogin: (username: string, password: string, remember?: boolean) => Promise<string | null>;
   onSignup: (username: string, email: string, password: string, displayName: string) => Promise<string | null>;
+  biometricsAvailable?: boolean;
+  biometricsEnrolled?: boolean;
+  onBiometricLogin?: () => Promise<string | null>;
 }
 
 const SLIDES = ["/bg/slide-1.png", "/bg/slide-2.png", "/bg/slide-3.png", "/bg/slide-4.png"];
@@ -85,12 +88,13 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "inherit",
 };
 
-export default function LoginScreen({ onLogin, onSignup }: Props) {
+export default function LoginScreen({ onLogin, onSignup, biometricsAvailable, biometricsEnrolled, onBiometricLogin }: Props) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -101,7 +105,7 @@ export default function LoginScreen({ onLogin, onSignup }: Props) {
 
     let err: string | null;
     if (mode === "login") {
-      err = await onLogin(username, password);
+      err = await onLogin(username, password, remember);
     } else {
       if (!email) { setError("Email is required"); setLoading(false); return; }
       if (password.length < 8) { setError("Password must be at least 8 characters"); setLoading(false); return; }
@@ -253,6 +257,45 @@ export default function LoginScreen({ onLogin, onSignup }: Props) {
               }
               {mode === "login" ? "Sign In" : "Create Account"}
             </button>
+
+            {/* Remember Me + Disclaimer */}
+            {mode === "login" && (
+              <div style={{ marginTop: 14, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  id="remember-me"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: "#06b6d4" }}
+                />
+                <label htmlFor="remember-me" style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", lineHeight: 1.4, cursor: "pointer" }}>
+                  Keep me signed in for 30 days. By checking this box, you agree to store an encrypted session token on this device.
+                </label>
+              </div>
+            )}
+
+            {/* Biometric Login */}
+            {mode === "login" && biometricsAvailable && biometricsEnrolled && onBiometricLogin && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true); setError("");
+                  const err = await onBiometricLogin();
+                  if (err) setError(err);
+                  setLoading(false);
+                }}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: "12px", marginTop: "12px",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  color: "rgba(255,255,255,0.6)", fontWeight: 500, fontSize: "13px",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  transition: "all 0.2s", fontFamily: "inherit",
+                }}
+              >
+                <span style={{ fontSize: 18 }}>🔐</span> Sign in with Biometrics
+              </button>
+            )}
           </form>
 
           {mode === "signup" && (

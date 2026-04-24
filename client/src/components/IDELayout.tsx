@@ -23,7 +23,7 @@ interface Message {
 }
 
 export default function IDELayout() {
-  const { token, user, login, signup, logout } = useAuth();
+  const { token, user, login, signup, logout, biometricsAvailable, biometricsEnrolled, enrollBiometrics, loginWithBiometrics } = useAuth();
   const queryClient = useQueryClient();
 
   // IDE state
@@ -179,7 +179,15 @@ export default function IDELayout() {
   }, []);
 
   // Auth gate
-  if (!token) return <LoginScreen onLogin={login} onSignup={signup} />;
+  if (!token) return (
+    <LoginScreen
+      onLogin={login}
+      onSignup={signup}
+      biometricsAvailable={biometricsAvailable}
+      biometricsEnrolled={biometricsEnrolled}
+      onBiometricLogin={loginWithBiometrics}
+    />
+  );
   if (showAnalytics) return <AnalyticsDashboard onBack={() => setShowAnalytics(false)} token={token} />;
 
   return (
@@ -214,6 +222,32 @@ export default function IDELayout() {
               <div style={{ padding: 16, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
                 <p style={{ marginBottom: 8 }}>Credits: {creditData?.credits ?? "—"}</p>
                 <p style={{ marginBottom: 8 }}>User: {user?.displayName || user?.username}</p>
+                <p style={{ marginBottom: 12 }}>Role: {user?.role || "member"}</p>
+
+                {/* Biometric enrollment */}
+                {biometricsAvailable && (
+                  <div style={{ marginBottom: 16, padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Biometric Login</p>
+                    {biometricsEnrolled ? (
+                      <p style={{ fontSize: 11, color: "#22c55e" }}>✓ Enrolled — use Face ID / fingerprint to sign in</p>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          const err = await enrollBiometrics();
+                          if (err) alert(err);
+                        }}
+                        style={{
+                          padding: "8px 14px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                          background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)",
+                          color: "#06b6d4", cursor: "pointer",
+                        }}
+                      >
+                        🔐 Enable Biometrics
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <button onClick={logout} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", fontSize: 12 }}>Logout</button>
               </div>
             </div>
