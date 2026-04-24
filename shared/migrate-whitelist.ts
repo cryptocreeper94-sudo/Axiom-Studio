@@ -8,10 +8,14 @@
  */
 
 import pg from "pg";
+import "dotenv/config";
+
+const dbUrl = process.env.DATABASE_URL || "";
+const needsSsl = dbUrl.includes("neon") || dbUrl.includes("render") || dbUrl.includes("amazonaws");
 
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  connectionString: dbUrl,
+  ssl: needsSsl ? { rejectUnauthorized: false } : false,
 });
 
 async function migrate() {
@@ -60,7 +64,7 @@ async function migrate() {
   await pool.query(`
     INSERT INTO ecosystem_whitelist (email, display_name, access_level, apps, notes, granted_by)
     VALUES (
-      'mathew.kemper@gmail.com',
+      'pcdirect97@gmail.com',
       'Mathew Kemper',
       'full',
       ARRAY['axiom-studio','axiom42','trustgen','trustvault','lumeline'],
