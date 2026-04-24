@@ -9,7 +9,7 @@ import type { Express, Request, Response } from "express";
 import { eq, desc, sql } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { db } from "./db.js";
+import { db, pool } from "./db.js";
 import {
   agentConversations,
   agentMessages,
@@ -22,6 +22,26 @@ import {
 import { getProviderStream, type ChatMessage } from "./agent-providers.js";
 import { AGENT_PROMPTS, AGENT_SEEDS } from "./agent-prompts.js";
 import { classifyMessage, ROUTE_MODELS } from "./auto-router.js";
+
+// ─── Whitelist Check ─────────────────────────────────────────────────
+
+async function checkWhitelist(email: string, app: string = "axiom-studio"): Promise<{ allowed: boolean; entry?: any }> {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM ecosystem_whitelist
+       WHERE email = $1 AND active = true AND ($2 = ANY(apps) OR 'all' = ANY(apps))`,
+      [email.toLowerCase().trim(), app]
+    );
+    if (result.rows.length > 0) {
+      return { allowed: true, entry: result.rows[0] };
+    }
+    return { allowed: false };
+  } catch {
+    // If table doesn't exist yet, allow all (graceful degradation)
+    console.warn("[Whitelist] Table not found — allowing all access");
+    return { allowed: true };
+  }
+}
 
 // ─── Auth Middleware ──────────────────────────────────────────────────
 
@@ -172,7 +192,7 @@ export function registerAgentRoutes(app: Express): void {
     });
   });
 
-  // ── Auth Signup ────────────────────────────────────────────────────
+  // ── Auth Signup (whitelist-gated) ───────────────────────────────────
   app.post("/api/agent/auth/signup", async (req: Request, res: Response) => {
     const { username, email, password, displayName } = req.body;
     if (!username || !email || !password) {
@@ -183,6 +203,17 @@ export function registerAgentRoutes(app: Express): void {
     // Check password strength
     if (password.length < 8) {
       res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
+      return;
+    }
+
+    // ── Whitelist gate ──
+    const { allowed, entry } = await checkWhitelist(email, "axiom-studio");
+    if (!allowed) {
+      res.status(403).json({
+        success: false,
+        error: "Axiom Studio is in closed beta. Request access at darkwavestudios.io",
+        code: "WHITELIST_REQUIRED",
+      });
       return;
     }
 
@@ -209,30 +240,33 @@ export function registerAgentRoutes(app: Express): void {
       return;
     }
 
-    // Create user
+    // Create user — whitelist access_level determines starting credits
     const passwordHash = await bcrypt.hash(password, 12);
     const colors = ["#06b6d4", "#14b8a6", "#a855f7", "#3b82f6", "#ec4899", "#f97316"];
     const avatarColor = colors[Math.floor(Math.random() * colors.length)];
+    const startingCredits = entry?.access_level === "full" ? 100 : 10;
 
     const [newUser] = await db
       .insert(chatUsers)
       .values({
         username,
-        email,
+        email: email.toLowerCase().trim(),
         passwordHash,
         displayName: displayName || username,
         avatarColor,
-        role: "member",
+        role: entry?.access_level === "full" ? "member" : "member",
       })
       .returning();
 
-    // Seed 10 free credits
+    // Seed credits (whitelisted full-access users get 100)
     await db.insert(aiCreditBalances).values({
       userId: newUser.id,
-      credits: 10,
-      totalPurchased: 10,
+      credits: startingCredits,
+      totalPurchased: startingCredits,
       totalUsed: 0,
     });
+
+    console.log(`[Whitelist] User ${email} signed up (access: ${entry?.access_level}, credits: ${startingCredits})`);
 
     const token = jwt.sign(
       { userId: newUser.id, username: newUser.username },
