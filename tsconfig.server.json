@@ -8,11 +8,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "baseUrl": ".",
-    "resolveJsonModule": true,
-    "paths": {
-      "@shared/*": ["./shared/*"]
-    }
+    "resolveJsonModule": true
   },
   "include": ["server/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist", "client"]
