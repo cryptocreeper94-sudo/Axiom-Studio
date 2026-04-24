@@ -101,7 +101,7 @@ export function registerStripeRoutes(app: Express): void {
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${process.env.APP_URL || "https://axiomstudio.dev"}/billing?success=true`,
         cancel_url: `${process.env.APP_URL || "https://axiomstudio.dev"}/billing?canceled=true`,
-        metadata: { userId, tierId },
+        metadata: { type: "axiom_subscription", userId, tierId },
       });
 
       res.json({ url: session.url });
