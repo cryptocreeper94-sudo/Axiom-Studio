@@ -17,8 +17,10 @@ const router = Router();
 // Workspace root — sandboxed directory
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || path.resolve(process.cwd(), "workspace");
 
-// Ensure workspace exists
-fs.mkdir(WORKSPACE_ROOT, { recursive: true }).catch(() => {});
+// Ensure workspace exists (non-blocking, non-fatal)
+fs.mkdir(WORKSPACE_ROOT, { recursive: true })
+  .then(() => console.log(`[Workspace] Root: ${WORKSPACE_ROOT}`))
+  .catch((e) => console.warn(`[Workspace] Could not create root dir: ${e.message}`));
 
 // Auth middleware
 function requireAuth(req: any, res: any, next: any) {

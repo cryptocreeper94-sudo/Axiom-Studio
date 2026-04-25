@@ -5,6 +5,9 @@
   "private": true,
   "description": "Axiom Studio — Multi-Agent AI Coding IDE by DarkWave Studios",
   "license": "UNLICENSED",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "tsx server/index.ts",
     "dev:client": "vite dev --port 5101",
