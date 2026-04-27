@@ -11,6 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { registerAgentRoutes } from "./agent-routes.js";
 import { registerStripeRoutes } from "./stripe-routes.js";
+import { registerCoinbaseRoutes } from "./coinbase-routes.js";
 import notificationRoutes from "./notification-routes.js";
 import analyticsRoutes from "./analytics-routes.js";
 import workspaceRoutes from "./workspace-routes.js";
@@ -33,6 +34,7 @@ app.use((_req, res, next) => {
 // Register API routes
 registerAgentRoutes(app);
 registerStripeRoutes(app);
+registerCoinbaseRoutes(app);
 app.use("/api/agent", notificationRoutes);
 console.log("[Axiom Studio] Notification routes registered");
 app.use("/api/analytics", analyticsRoutes);
