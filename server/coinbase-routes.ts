@@ -35,8 +35,16 @@ export function registerCoinbaseRoutes(app: Express): void {
     return;
   }
 
+  // ── Coming Soon flag — flip to false when Coinbase webhooks are configured ──
+  const CRYPTO_COMING_SOON = true;
+
   // ── Create crypto checkout for tier upgrade ─────────────────────────
   app.post("/api/agent/subscribe/crypto", async (req: Request, res: Response) => {
+    if (CRYPTO_COMING_SOON) {
+      res.json({ comingSoon: true, message: "Crypto payments coming soon. Use card checkout for now." });
+      return;
+    }
+
     const userId = extractUserId(req);
     if (!userId) { res.status(401).json({ error: "Auth required" }); return; }
 
