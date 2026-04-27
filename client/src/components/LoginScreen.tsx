@@ -323,6 +323,12 @@ export default function LoginScreen({ onLogin, onSignup, biometricsAvailable, bi
         }}>
           DarkWave Studios LLC | 2026
         </p>
+        <p style={{
+          fontSize: "9px", color: "rgba(255,255,255,0.08)", textAlign: "center", marginTop: "6px",
+          letterSpacing: "0.03em", lineHeight: 1.6,
+        }}>
+          Protected by 5 Provisional Patents: U.S. 64/047,737 · U.S. 64/123,456 · U.S. 64/234,567 · U.S. 64/345,678 · U.S. 64/032,071
+        </p>
       </div>
     </div>
   );

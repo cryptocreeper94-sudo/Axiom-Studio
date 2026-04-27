@@ -292,24 +292,42 @@ export function registerAgentRoutes(app: Express): void {
 
   // ── List available agents ──────────────────────────────────────────
   app.get("/api/agent/models", async (_req: Request, res: Response) => {
-    const agents = await db
-      .select()
-      .from(agentDefinitions)
-      .where(eq(agentDefinitions.isActive, true));
+    try {
+      const agents = await db
+        .select()
+        .from(agentDefinitions)
+        .where(eq(agentDefinitions.isActive, true));
 
-    res.json(
-      agents.map((a) => ({
-        id: a.id,
-        name: a.name,
-        description: a.description,
-        model: a.model,
-        provider: a.provider,
-        maxTokens: a.maxTokens,
-        creditCost: a.creditCost,
-        icon: a.icon,
-        color: a.color,
-      }))
-    );
+      res.json(
+        agents.map((a) => ({
+          id: a.id,
+          name: a.name,
+          description: a.description,
+          model: a.model,
+          provider: a.provider,
+          maxTokens: a.maxTokens,
+          creditCost: a.creditCost,
+          icon: a.icon,
+          color: a.color,
+        }))
+      );
+    } catch (err) {
+      console.warn("[Agent Models] DB query failed, returning seed agents:", (err as any).message);
+      // Graceful fallback — return seed data if table doesn't exist yet
+      res.json(
+        AGENT_SEEDS.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          model: s.model,
+          provider: s.provider,
+          maxTokens: s.maxTokens,
+          creditCost: s.creditCost,
+          icon: s.icon,
+          color: s.color,
+        }))
+      );
+    }
   });
 
   // ── List conversations ─────────────────────────────────────────────

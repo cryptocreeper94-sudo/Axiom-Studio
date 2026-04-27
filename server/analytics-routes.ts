@@ -26,6 +26,42 @@ router.post("/pageview", async (req: Request, res: Response) => {
 
     res.status(201).json({ success: true });
   } catch (err: any) {
+    // Auto-create table on first failure (relation does not exist)
+    if (err.message?.includes("does not exist")) {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS axiom_page_views (
+            id SERIAL PRIMARY KEY,
+            path TEXT NOT NULL,
+            referrer TEXT,
+            user_agent TEXT,
+            session_id TEXT,
+            user_id TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );
+          CREATE TABLE IF NOT EXISTS axiom_events (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            category TEXT DEFAULT 'general',
+            properties JSONB DEFAULT '{}',
+            session_id TEXT,
+            user_id TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );
+        `);
+        console.log("[Analytics] Auto-created tables");
+        // Retry the insert
+        const { path, referrer, userAgent, sessionId, userId } = req.body;
+        await pool.query(
+          `INSERT INTO axiom_page_views (path, referrer, user_agent, session_id, user_id, created_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())`,
+          [path, referrer || null, userAgent || null, sessionId || null, userId || null]
+        );
+        return res.status(201).json({ success: true });
+      } catch (retryErr: any) {
+        console.error("[Analytics] Auto-create retry failed:", retryErr.message);
+      }
+    }
     console.error("[Analytics] Pageview error:", err.message);
     res.status(500).json({ error: "Failed to track pageview" });
   }
