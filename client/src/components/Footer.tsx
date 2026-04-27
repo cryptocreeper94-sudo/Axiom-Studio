@@ -212,6 +212,15 @@ export default function Footer({ onOpenAnalytics }: { onOpenAnalytics?: () => vo
             <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.12)" }}>
               DarkWave Studios LLC. All rights reserved. 2026
             </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+            {["64/032,339","64/047,512","64/047,467","64/047,496","64/047,536"].map((n) => (
+              <span key={n} style={{
+                fontSize: "8px", fontFamily: "monospace", color: "rgba(239,68,68,0.4)",
+                padding: "2px 6px", borderRadius: "8px",
+                background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.08)",
+              }}>Pat. App. {n}</span>
+            ))}
             <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.06)" }}>|</span>
             <a href="https://darkwavestudios.io/terms" target="_blank" rel="noopener"
               style={{ fontSize: "10px", color: "rgba(255,255,255,0.12)", textDecoration: "none" }}>Terms</a>
