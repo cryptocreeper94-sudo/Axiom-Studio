@@ -118,10 +118,11 @@ export default function LoginScreen({ onLogin, onSignup, biometricsAvailable, bi
 
   return (
     <div style={{
-      height: "100vh", width: "100vw",
+      minHeight: "100vh", width: "100vw",
       display: "flex", alignItems: "center", justifyContent: "center",
-      position: "relative", overflow: "hidden",
+      position: "relative", overflow: "auto",
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      padding: "2rem 0",
     }}>
       {/* Ken Burns Background */}
       <KenBurnsBackground />
