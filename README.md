@@ -1,80 +1,44 @@
-# Axiom Studio (axiomstudio.dev)
+﻿# Axiom Studio
 
-> 🔒 **Patent Pending** — DarkWave Studios LLC
->
-> - U.S. Pat. App. No. **64/032,339** — Lume‑V: Deterministic Autonomous Infrastructure Governance Engine
-> - U.S. Pat. App. No. **64/047,512** — Lume Core: Deterministic Natural‑Language Programming Language
-> - U.S. Pat. App. No. **64/047,467** — Axiom: Deterministic Zero‑Assumption AI System
-> - U.S. Pat. App. No. **64/047,496** — Lume‑X: Deterministic Multi‑Agent Cognition Substrate
-> - U.S. Pat. App. No. **64/047,536** — Synthetic Organisms: Deterministic Self‑Governing Constructs
+> $([char]0x1F512) **Patent Pending:** The core deterministic governance capabilities (Lume-V) within this repository are protected under U.S. Provisional Patent Application **No. 64/032,339** (Filed April 7, 2026).
 
-Multi-agent AI development environment with intelligent auto-routing. Part of the DarkWave Studios Trust Layer ecosystem.
+Axiom engine configuration and testing interface — pipeline visualization, agent testing, and knowledge pack management.
 
-**Live:** [axiomstudio.dev](https://axiomstudio.dev)
+**Live:** [studio.axiom42.com](https://studio.axiom42.com)
 
----
+## Lume-OS Integration
 
-## Architecture
+This application is registered with **Lume Cortex** — the deterministic meta-operating system governing the Trust Layer ecosystem.
 
-```
-axiom-studio/
-├── server/                  # Express + TypeScript backend
-│   ├── index.ts             # Server entrypoint
-│   ├── agent-routes.ts      # Multi-agent chat API (auto-routing)
-│   ├── stripe-routes.ts     # Stripe billing integration
-│   ├── coinbase-routes.ts   # Coinbase Commerce (crypto payments)
-│   ├── analytics-routes.ts  # Usage analytics
-│   ├── workspace-routes.ts  # Workspace filesystem API
-│   ├── notification-routes.ts # Push notifications
-│   ├── tiers.ts             # Subscription tier definitions
-│   └── db.ts                # PostgreSQL (Drizzle ORM)
-├── client/                  # React 19 + Vite SPA
-│   ├── src/components/      # UI components (Chat, Footer, Billing)
-│   └── src/pages/           # Page routes
-└── shared/                  # Shared schema
-```
+| Property | Value |
+|---|---|
+| **Cortex Bridge** | `cortex-bridge.js` |
+| **Lume-V Wrapper** | `lume-v.wrapper.lume` |
+| **Ecosystem** | trust-layer-42 (42 apps · 42 papers) |
+| **Cortex Endpoint** | lume-cortex.onrender.com |
 
-## Auto-Routing
+## Stack
 
-Axiom Studio intelligently routes messages to the best AI model based on complexity:
-
-| Tier | Models Available | Messages/Month |
-|---|---|---|
-| Free | Mini only | 30 |
-| Developer | Sonnet + Mini | 300 |
-| Professional | Opus + Sonnet + Mini | 1,000 |
-| Business | All + Priority | 3,000 |
-| Enterprise | All + Unlimited | ∞ |
-
-## Payments
-
-- **Stripe** — Card payments for subscriptions
-- **Coinbase Commerce** — Crypto payments (coming soon)
+| Layer | Tech |
+|---|---|
+| React 19 + Vite 7 | | Express + TypeScript | | Axiom API | | Trust Layer SSO | | Render |
 
 ## Development
 
-```bash
+``bash
 npm install
-npm run dev        # Starts Express + Vite dev server on :5101
-npm run db:push    # Push Drizzle schema to PostgreSQL
-```
+npm run dev
+``
 
-### Required Environment Variables
+---
 
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Auth token signing |
-| `ANTHROPIC_API_KEY` | Claude API access |
-| `OPENAI_API_KEY` | GPT/Mini API access |
-| `STRIPE_SECRET_KEY` | Payment processing |
-| `COINBASE_COMMERCE_API_KEY` | Crypto payments |
+## Intellectual Property
 
-## Deployment
+**Patent Pending:**
+- U.S. Pat. App. No. 64/032,339 — Lume-V
+- U.S. Pat. App. No. 64/047,512 — Lume Core
+- U.S. Pat. App. No. 64/047,467 — Axiom
+- U.S. Pat. App. No. 64/047,496 — Lume-X
+- U.S. Pat. App. No. 64/047,536 — Synthetic Organisms
 
-Deployed to **Render** (Ohio):
-
-```bash
-npm run build
-npm run start
-```
+© 2026 DarkWave Studios LLC. All rights reserved.
