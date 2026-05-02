@@ -127,7 +127,7 @@ export default function AgentPanel() {
           fullContent += chunk.content;
           setStreamingContent(fullContent);
         } else if (chunk.type === "route") {
-          setRouteInfo({ model: chunk.model, agent: chunk.agent, score: chunk.score, reason: chunk.reason });
+          setRouteInfo({ model: chunk.model ?? "", agent: chunk.agent ?? "", score: chunk.score ?? 0, reason: chunk.reason ?? "" });
         } else if (chunk.type === "usage") {
           finalInputTokens = chunk.inputTokens || 0;
           finalOutputTokens = chunk.outputTokens || 0;
@@ -198,7 +198,7 @@ export default function AgentPanel() {
           fullContent += chunk.content;
           setStreamingContent(fullContent);
         } else if (chunk.type === "route") {
-          setRouteInfo({ model: chunk.model, agent: chunk.agent, score: chunk.score, reason: chunk.reason });
+          setRouteInfo({ model: chunk.model ?? "", agent: chunk.agent ?? "", score: chunk.score ?? 0, reason: chunk.reason ?? "" });
         } else if (chunk.type === "usage") {
           finalInputTokens = chunk.inputTokens || 0;
           finalOutputTokens = chunk.outputTokens || 0;
@@ -238,7 +238,7 @@ export default function AgentPanel() {
   const activeAgent = agents.find((a: any) => a.id === activeAgentId);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", height: "100dvh" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
       <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
         {/* Mobile overlay */}
         <div

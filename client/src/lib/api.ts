@@ -55,7 +55,7 @@ export async function* streamChat(
   message: string,
   agentId: string,
   errorContext?: string
-): AsyncGenerator<{ type: string; content?: string; inputTokens?: number; outputTokens?: number; error?: string }> {
+): AsyncGenerator<{ type: string; content?: string; inputTokens?: number; outputTokens?: number; error?: string; model?: string; agent?: string; score?: number; reason?: string }> {
   const res = await fetch(`${BASE}/chat`, {
     method: "POST",
     headers: headers(token),
