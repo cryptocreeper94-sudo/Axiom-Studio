@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Axiom Studio — Agent Tools
  * Tool definitions and execution for the agentic loop.

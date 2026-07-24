@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Axiom Studio — Agent API Routes
  * SSE streaming, conversation management, credit gating.

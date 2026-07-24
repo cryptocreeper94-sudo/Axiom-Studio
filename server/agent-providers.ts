@@ -92,7 +92,9 @@ export async function* streamAnthropic(
       const stream = anthropic.messages.stream({
         model: config.model,
         max_tokens: config.maxTokens,
-        system: config.systemPrompt,
+        system: [
+          { type: "text", text: config.systemPrompt, cache_control: { type: "ephemeral" } }
+        ],
         messages: convoMessages,
         tools: ANTHROPIC_TOOLS,
         tool_choice: { type: "auto" },

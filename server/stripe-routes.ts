@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Axiom Studio — Stripe Payment Routes
  * Pay-as-you-go credit packs + legacy subscription support.

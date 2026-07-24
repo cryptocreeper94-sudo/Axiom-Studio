@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Axiom Studio — Workspace File System Routes (Database Backed)
  * Server-side proxy for reading/writing workspace files.

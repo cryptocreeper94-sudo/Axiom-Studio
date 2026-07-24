@@ -80,14 +80,7 @@ export const agentConversations = pgTable("agent_conversations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertAgentConversationSchema = createInsertSchema(agentConversations).omit({
-  id: true,
-  totalTokens: true,
-  totalCost: true,
-  pinned: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertAgentConversationSchema = createInsertSchema(agentConversations);
 export type InsertAgentConversation = z.infer<typeof insertAgentConversationSchema>;
 export type AgentConversation = typeof agentConversations.$inferSelect;
 
@@ -105,10 +98,7 @@ export const agentMessages = pgTable("agent_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertAgentMessageSchema = createInsertSchema(agentMessages).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertAgentMessageSchema = createInsertSchema(agentMessages);
 export type InsertAgentMessage = z.infer<typeof insertAgentMessageSchema>;
 export type AgentMessage = typeof agentMessages.$inferSelect;
 
@@ -129,9 +119,7 @@ export const agentDefinitions = pgTable("agent_definitions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertAgentDefinitionSchema = createInsertSchema(agentDefinitions).omit({
-  createdAt: true,
-});
+export const insertAgentDefinitionSchema = createInsertSchema(agentDefinitions);
 export type InsertAgentDefinition = z.infer<typeof insertAgentDefinitionSchema>;
 export type AgentDefinition = typeof agentDefinitions.$inferSelect;
 
