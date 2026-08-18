@@ -3,8 +3,8 @@
 
 FROM node:22-slim
 
-# wget needed for Coolify healthcheck
-RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+# wget/curl needed for Coolify healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends wget curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
