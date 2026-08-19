@@ -79,8 +79,7 @@ async function deductCreditsAtomic(
   agentId: string,
   description: string
 ): Promise<boolean> {
-  // Dev mode bypass — no credit gating without Firebase
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT) return true;
+  // Credit gating is ALWAYS enforced — no dev bypass
 
   // Owner bypass — unlimited access
   const [user] = await db.select().from(chatUsers).where(eq(chatUsers.id, userId)).limit(1);
@@ -267,7 +266,7 @@ export function registerAgentRoutes(app: Express): void {
       // Check for pre-granted credits in whitelist notes (e.g. "pre-granted 500 credits")
       const preGrantMatch = entry?.notes?.match(/pre-granted\s+(\d+)\s+credits/i);
       const preGrantedCredits = preGrantMatch ? parseInt(preGrantMatch[1]) : 0;
-      const startingCredits = isOwner ? 999999 : preGrantedCredits > 0 ? preGrantedCredits : entry?.access_level === "full" ? 100 : 50;
+      const startingCredits = isOwner ? 999999 : preGrantedCredits > 0 ? preGrantedCredits : entry?.access_level === "full" ? 100 : 0;
 
       const [newUser] = await db
         .insert(chatUsers)
@@ -370,7 +369,7 @@ export function registerAgentRoutes(app: Express): void {
         const isOwner = entry?.access_level === "owner";
         const preGrantMatch = entry?.notes?.match(/pre-granted\s+(\d+)\s+credits/i);
         const preGrantedCredits = preGrantMatch ? parseInt(preGrantMatch[1]) : 0;
-        const startingCredits = isOwner ? 999999 : preGrantedCredits > 0 ? preGrantedCredits : entry?.access_level === "full" ? 100 : 50;
+        const startingCredits = isOwner ? 999999 : preGrantedCredits > 0 ? preGrantedCredits : entry?.access_level === "full" ? 100 : 0;
 
         // Generate a unique username from email
         const baseUsername = email.split("@")[0].replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 20);
